@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        padding: 15px;
+        background-color: #f6f7f8;
+      }
+
+      #dropzone {
+        width: 250px;
+        height: 100px;
+        border: 2px dashed #5c6bc0;
+        line-height: 80px;
+        text-align: center;
+        font-size: 16px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      #dropzone:hover {
+        background-color: #e8eaf6;
+      }
+
+      h4 {
+        border-bottom: 1px solid #5c6bc0;
+        padding-bottom: 10px;
+      }
+
+      button {
+        background-color: #5c6bc0;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #3f51b5;
+      }
+
+      select, input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      input[type="checkbox"] {
+        margin-right: 5px;
+      }
+
+      #status {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 4px;
+      }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- Drag and drop zone for CSV file -->
+
+<div id="dropzone">Drag & Drop CSV here</div>
+<input type="file" id="csvFile" accept=".csv" style="display: none;">
+
+<!-- Area to select columns from the CSV to be imported -->
+
+<div id="columnsSelection" style="display:none;">
+    <h4>Select columns to import:</h4>
+</div>
+
+<!-- Area to filter data before importing -->
+
+<div id="filterSection" style="display:none;">
+    <h4>Filter Data:</h4>
+    <p>
+        <label for="filterColumn">Filter Column:</label>
+        <select id="filterColumn"></select>
+    </p>
+    <p>
+        <label for="filterValue">Filter Value:</label>
+        <input type="text" id="filterValue" placeholder="Value to filter by">
+    </p>
+</div>
+
+<!-- Area to select the Google Sheet where data will be populated -->
+
+<div id="sheetSelection" style="display:none;">
+    <h4>Choose Google Sheet:</h4>
+    <select id="sheetList"></select>
+    <p>
+        Or create new: <input type="text" id="newSheetName" placeholder="Sheet Name">
+    </p>
+
+    <!-- Choose between appending data or creating a new sheet -->
+
+    <h4>Action:</h4>
+    <input type="radio" name="actionType" value="append" checked> Append <br> </br>
+    <input type="radio" name="actionType" value="new"> Overwrite/Create New <br> </br>
+</div>
+
+<button onclick="handleFile()">Upload</button>
+<div id="status"></div>
+
+<script>
+    /**
+     * When the DOM is ready, populate the sheet dropdown with existing sheet names.
+     */
+    document.addEventListener("DOMContentLoaded", function() {
+        google.script.run.withSuccessHandler(populateSheetList).getSheetNames();
+    });
+
+    var fileInput = document.getElementById('csvFile');
+    var dropzone = document.getElementById('dropzone');
+    
+    dropzone.ondragover = function() {
+        this.className = 'hover';
+        return false;
+    };
+
+    dropzone.ondragleave = function() {
+        this.className = '';
+        return false;
+    };
+
+    dropzone.ondrop = function(e) {
+        this.className = '';
+        e.preventDefault();
+        fileInput.files = e.dataTransfer.files;
+        previewHeaders();
+    };
+
+    fileInput.addEventListener('change', previewHeaders);
+
+    /**
+     * Populate the dropdown with sheet names.
+     */
+
+    function populateSheetList(sheetNames) {
+        var sheetDropdown = document.getElementById('sheetList');
+        sheetNames.forEach(function(sheetName) {
+            var option = document.createElement('option');
+            option.text = sheetName;
+            sheetDropdown.add(option);
+        });
+        document.getElementById('sheetSelection').style.display = 'block';
+    }
+
+    /**
+     * Read the selected CSV file and preview the headers.
+     */
+
+    function previewHeaders() {
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var content = e.target.result;
+            var csvData = content.split('\n');
+            var headers = csvData[0].split(','); 
+
+            var columnsDiv = document.getElementById('columnsSelection');
+            columnsDiv.innerHTML = '<h4>Select columns to import:</h4>'; 
+            
+            // Populate headers for user to select from.
+            headers.forEach(function(header, index) {
+                columnsDiv.innerHTML += '<input type="checkbox" id="col' + index + '" checked>' + header + '<br>';
+                var filterDropdown = document.getElementById('filterColumn');
+                var option = document.createElement('option');
+                option.value = index;
+                option.text = header;
+                filterDropdown.add(option);
+            });
+
+            columnsDiv.style.display = 'block';
+            document.getElementById('filterSection').style.display = 'block';
+        };
+        reader.readAsText(file);
+    }
+
+    /**
+     * Handling the upload of the selected CSV file.
+     */
+
+    function handleFile() {
+        var file = fileInput.files[0];
+        if (!file) {
+            document.getElementById('status').innerText = "No file selected.";
+            return;
+        }
+        
+        var checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+        var selectedColumns = [];
+        for(var i = 0; i < checkboxes.length; i++){
+            selectedColumns.push(Number(checkboxes[i].id.replace('col', '')));
+        }
+
+        var filterColumn = document.getElementById('filterColumn').value;
+        var filterValue = document.getElementById('filterValue').value;
+
+        var chosenSheet = document.getElementById('newSheetName').value || document.getElementById('sheetList').value;
+        var actionType = document.querySelector('input[name="actionType"]:checked').value;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var content = e.target.result;
+            google.script.run
+              .withSuccessHandler(function(response) {
+                  document.getElementById('status').innerText = response;
+              })
+              .uploadCSV(content, file.name, selectedColumns, filterColumn, filterValue, chosenSheet, actionType);
+        };
+        reader.readAsText(file);
+    }
+    
+</script>
+</body>
+</html>
