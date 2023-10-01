@@ -49,7 +49,7 @@ Once you're done, make sure you **record a video** showing your project working.
 We have a checklist at the bottom of this README file, which you should update as your progress with your assignment. It will help us evaluate your project.
 
 - [X] My code's working just fine! 🥳
-- [ ] I have recorded a video showing it working and embedded it in the README ▶️
+- [X] I have recorded a video showing it working and embedded it in the README ▶️
 - [X] I have tested all the normal working cases 😎
 - [X] I have even solved some edge cases (brownie points) 💪
 - [X] I added my very planned-out approach to the problem at the end of this README 📜
@@ -59,6 +59,13 @@ Feel free to check the discussions tab, you might get something of help there. C
 
 ## Developer's Section
 *Add your video here, and your approach to the problem (optional). Leave some comments for us here if you want, we will be reading this :)*
+
+**Video**
+
+
+
+https://github.com/StackItHQ/stackit-hiring-assignment-AyushmanRF/assets/84237760/97395095-d2a6-4bf2-b4c2-a9b0b9fa353e
+
 
 
 
