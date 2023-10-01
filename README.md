@@ -66,6 +66,7 @@ Feel free to check the discussions tab, you might get something of help there. C
 
 https://github.com/StackItHQ/stackit-hiring-assignment-AyushmanRF/assets/84237760/97395095-d2a6-4bf2-b4c2-a9b0b9fa353e
 
+https://github.com/StackItHQ/stackit-hiring-assignment-AyushmanRF/blob/main/Nowstackit%20Challenge%20Video.mp4
 
 
 
